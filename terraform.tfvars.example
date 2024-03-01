@@ -1,0 +1,5 @@
+# copy this to terraform.tfvars
+project_id = "myProjectID"
+region = "europe-west3"
+function_name = "myGreatSheetsAutomation"
+spread_sheet_url= "https://docs.google.com/spreadsheets/d/...."
