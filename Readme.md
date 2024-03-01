@@ -1,8 +1,8 @@
-# Google Sheets Data Append Automation
+# Webhook 2 Sheet
 
 ## Summary
 
-This project automates the process of appending data to a specific Google Sheet using a Google Cloud Function. You can send any JSON record as POST to the cloud function and it will be added as a new row in the Sheet. It leverages the Google Sheets API to append new data sent via HTTP requests to a predefined spreadsheet. This solution is ideal for integrating various data sources into a centralized Google Sheet for reporting, analysis, or aggregation purposes.
+This project automates the process of appending data to a specific Google Sheet using a Google Cloud Function. It provides a webhook where you can send any JSON record as POST request to and it will be added as a new row in the Sheet. The mapping will be defined in a separate tab in the Sheet. It leverages the Google Sheets API to append new data sent via HTTP requests to a predefined spreadsheet. This solution is ideal for integrating various data sources into a centralized Google Sheet for reporting, analysis, or aggregation purposes.
 
 ## Prerequisites/Installation
 
