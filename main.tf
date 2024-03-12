@@ -8,14 +8,15 @@ variable "region" {
   type        = string
 }
 
-variable "function_name" {
-  description = "A unique name for the cloud function and related resources"
+variable "global_name" {
+  description = "Name used as part of various resources"
   type        = string
 }
 
-variable "spread_sheet_url" {
-  description = "url of Google sheet"
-  type        = string
+
+variable "functions" {
+  description = "A map of function names to Google Sheet URLs"
+  type        = map(string)
 }
 
 provider "google" {
@@ -36,12 +37,12 @@ resource "google_project_service" "sheets_api" {
 }
 
 resource "google_service_account" "cloud_function_account" {
-  account_id   = "${var.function_name}-account"
-  display_name = "${var.function_name} Service Account"
+  account_id   = "${var.global_name}-account"
+  display_name = "${var.global_name} Service Account"
 }
 
 resource "google_secret_manager_secret" "service_account_key_secret" {
-  secret_id   = "${var.function_name}-service-account-key"
+  secret_id   = "${var.global_name}-service-account-key"
   replication {
     user_managed {
       replicas {
@@ -72,7 +73,7 @@ resource "google_secret_manager_secret_iam_member" "secret_accessor" {
 }
 
 resource "google_storage_bucket" "bucket" {
-  name     = "${var.function_name}-bucket"
+  name     = "${var.global_name}-bucket"
   location = var.region
   lifecycle_rule {
     condition {
@@ -100,7 +101,9 @@ resource "google_storage_bucket_object" "archive" {
 }
 
 resource "google_cloudfunctions_function" "cloud_function" {
-  name        = var.function_name
+  for_each = var.functions
+
+  name        = each.key
   description = "Appends data to a Google Sheet"
   runtime     = "python39"
 
@@ -111,7 +114,7 @@ resource "google_cloudfunctions_function" "cloud_function" {
   entry_point           = "sheets_append"
 
   environment_variables = {
-    SPREADSHEET_URL = var.spread_sheet_url
+    SPREADSHEET_URL = each.value
   }
 
   secret_environment_variables {
@@ -129,9 +132,11 @@ resource "google_cloudfunctions_function" "cloud_function" {
 
 # IAM entry for all users to invoke the function (public access); terraform does not support     --allow-unauthenticated  as gcloud command does
 resource "google_cloudfunctions_function_iam_member" "invoker" {
-  project        = google_cloudfunctions_function.cloud_function.project
-  region         = google_cloudfunctions_function.cloud_function.region
-  cloud_function = google_cloudfunctions_function.cloud_function.name
+  for_each = var.functions
+
+  project        = google_cloudfunctions_function.cloud_function[each.key].project
+  region         = google_cloudfunctions_function.cloud_function[each.key].region
+  cloud_function = each.key
 
   role   = "roles/cloudfunctions.invoker"
   member = "allUsers"
@@ -139,4 +144,8 @@ resource "google_cloudfunctions_function_iam_member" "invoker" {
 
 output "service_account_email" {
   value = google_service_account.cloud_function_account.email
+}
+output "cloud_function_urls" {
+  value = { for k, v in google_cloudfunctions_function.cloud_function : k => "https://${v.region}-${v.project}.cloudfunctions.net/${v.name}" }
+  description = "The URLs of the deployed Cloud Functions"
 }

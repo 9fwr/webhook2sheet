@@ -1,5 +1,8 @@
 # copy this to terraform.tfvars
 project_id = "myProjectID"
 region = "europe-west3"
-function_name = "myGreatSheetsAutomation"
-spread_sheet_url= "https://docs.google.com/spreadsheets/d/...."
+global_name = "web2sheets"
+functions = {
+  "myGreatSheetsAutomation" = "https://docs.google.com/spreadsheets/d/....",
+  # Add more functions and URLs as needed
+}
